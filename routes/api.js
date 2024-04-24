@@ -42,8 +42,60 @@ module.exports = function (app) {
       res.status(500).send("There was an error saving in post");
     }
   })
-  .get((req, res) => {
-    
+  .get(async (req, res) => {
+    try {
+      const board = req.params.board
+      const threads = await ThreadModel.find({ board })
+                                      .sort({ bumped_on: -1 })
+                                      .limit(10)
+                                      .select('-reported -delete_password')
+                                      .populate({
+                                        path: 'replies',
+                                        options: {sort: { create_on: -1 }, limit: 3},
+                                        select: '-reported -delete_password'
+                                      })
+                                      .exec()
+      res.json(threads)
+    } catch (err) {
+      console.log(err)
+      res.status(500).send("Error fetching threads")
+    }
+  })
+  .put(async (req, res) => {
+    try {
+      const { board } = req.params
+      const { thread_id } = req.body
+
+      await ThreadModel.updateOne({ _id: thread_id, board }, { reported: true })
+
+      res.send("reported")
+
+    } catch (err) {
+      console.error(err)
+      res.status(500).send("Error updating thread")
+    }
+  })
+  .delete(async (req, res) => {
+    try {
+      const { board } = req.params
+      const { thread_id, delete_password } = req.body
+
+      const deleteThread = await ThreadModel.findOneAndDelete({
+        _id: thread_id,
+        board,
+        delete_password
+      })
+
+      if(!deleteThread) {
+        res.send("incorrect password")
+      } else {
+        res.send("success")
+      }
+
+    } catch(err) {
+      console.error(err)
+      res.status(500).send("Error deleting thread")
+    }
   })
   
     
