@@ -81,6 +81,9 @@ module.exports = function(app) {
       const boardName = req.params.board;
       const { thread_id, delete_password } = req.body;
 
+      //console.log("Deleting thread with ID:", thread_id);
+      //console.log("Provided delete password:", delete_password);
+
       try {
         let board = await Boards.findOne({ name: boardName }).exec();
 
@@ -88,7 +91,7 @@ module.exports = function(app) {
           return res.status(404).json({ error: 'Board not found' });
         }
 
-        const thread = board.threads.find(t => t._id.toString() === thread_id);
+        const thread = board.threads.find(t => t._id.toString() === String(thread_id));
 
         if (!thread) {
           return res.status(404).json({ error: 'Thread not found' });
@@ -99,7 +102,7 @@ module.exports = function(app) {
         if (!isPasswordCorrect) {
           return res.send('incorrect password');
         } else {
-          board.threads = board.threads.filter(t => t._id.toString() !== thread_id);
+          board.threads = board.threads.filter(t => t._id.toString() !== String(thread_id));
           await board.save();
           console.log('success', thread_id);
           res.send('success');
