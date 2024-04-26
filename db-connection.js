@@ -1,4 +1,10 @@
-const mongoose = require('mongoose')
-const db = mongoose.connect(process.env.DB)
+const mongoose = require('mongoose');
 
-module.exports = db
+// Connect to MongoDB without deprecated options
+mongoose.connect(process.env.DB, {
+    useNewUrlParser: true,
+    useUnifiedTopology: true
+});
+     
+
+module.exports = mongoose.connection;
